@@ -7,8 +7,10 @@
  */
 
 import React from 'react';
-import type {Node} from 'react';
+import type { Node } from 'react';
 import LoginArea from './JS/loginArea';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import {
   SafeAreaView,
   ScrollView,
@@ -16,18 +18,18 @@ import {
   StyleSheet,
   Text,
   useColorScheme,
-  View,
-  TextInput
+  View
 } from 'react-native';
 
 import {
   Colors,
 
 } from 'react-native/Libraries/NewAppScreen';
+import { Button } from 'react-native-paper';
 
 /* $FlowFixMe[missing-local-annot] The type annotation(s) required by Flow's
  * LTI update could not be added via codemod */
-const Section = ({children, title}): Node => {
+const Section = ({ children, title }): Node => {
   const isDarkMode = useColorScheme() === 'dark';
   return (
     <View style={styles.sectionContainer}>
@@ -53,12 +55,47 @@ const Section = ({children, title}): Node => {
   );
 };
 
-const App: () => Node = () => {
+
+
+const App: () => Node = ({ navigation }) => {
   const isDarkMode = useColorScheme() === 'dark';
 
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
+  const [IsWsClosed, onChangeWsState] = React.useState(false);
+
+  function connect(){
+    ws = new WebSocket("ws://106.53.58.190:4000");
+    ws.onopen = function () {
+      console.log("ws connected");
+      if (IsWsClosed) {
+        onChangeWsState(false);
+        clearInterval(reConnect);
+      }
+    }
+    ws.onclose = function () {
+      if (IsWsClosed) {
+      reConnect = setInterval(() => {
+        console.log("try to connect....");
+        connect();
+      }, 1000);
+    }
+      onChangeWsState(true);
+    };
+    ws.onmessage = function (evt) {
+      console.log(evt.data);
+      var data = JSON.parse(evt.data);
+      if (data.type == "登录返回结果") {
+
+      }
+    }
+    ws.onerror = function (e) {
+      onChangeWsState(true);
+      console.log(e);
+    }
+  }
+  connect();
 
   return (
     <SafeAreaView style={backgroundStyle}>
@@ -77,8 +114,11 @@ const App: () => Node = () => {
             欢迎使用 <Text style={styles.highlight}>LiteChat</Text> ，请输入账号密码以登录
           </Section>
           <View style={styles.sectionContainer}>
-            <LoginArea/>
+            <LoginArea IsWsClosed={IsWsClosed} ws={ws} />
           </View>
+          <Button onPress={() => navigation.navigate('ELUA')}>
+            许可协议
+          </Button>
         </View>
       </ScrollView>
     </SafeAreaView>
