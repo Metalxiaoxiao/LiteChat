@@ -1,8 +1,7 @@
 import React, { Component, useState } from 'react';
 import { View, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import { TextInput, Button, Chip } from 'react-native-paper';
-import EluaAlert from './EluaPage';
-
+import StorageUtil from './storage';
 const styles = StyleSheet.create({
   sectionContainer: {
     marginTop: 20,
@@ -54,14 +53,16 @@ const LoginArea = (prop) => {
       </View>
       <View style={styles.sectionContainer}>
         <Button mode="contained" onPress={
-          function () {
-            if(prop.ws.readyState ==  WebSocket.OPEN){
+          () => {
+            if (prop.ws.readyState == WebSocket.OPEN) {
               prop.ws.send(JSON.stringify(
                 {
                   userid: accont,
                   password: password
                 }
-              ))
+              ));
+              StorageUtil.setItem("userid", accont);
+              StorageUtil.setItem("password", password);
             }
           }
         }>
