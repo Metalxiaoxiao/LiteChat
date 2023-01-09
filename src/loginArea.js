@@ -2,6 +2,8 @@ import React, { Component, useState } from 'react';
 import { View, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import { TextInput, Button, Chip } from 'react-native-paper';
 import StorageUtil from './storage';
+import { useDispatch, useSelector } from 'react-redux';
+import { onSendingMessage } from './redux/Slices/WsController';
 const styles = StyleSheet.create({
   sectionContainer: {
     marginTop: 20,
@@ -22,15 +24,15 @@ const styles = StyleSheet.create({
 });
 
 
-const LoginArea = (prop) => {
+const LoginArea = () => {
+  const dispatch = useDispatch();
+  const connectionState = useSelector((state) => state.WsController.WsConnected);
   const [accont, onChangeAccont] = React.useState('');
   const [password, onChangePassword] = React.useState('');
   return (
     <>
       {
-        prop.IsWsClosed ? (
-          <Chip avatar={<ActivityIndicator size="small" color="#999999" />}>与服务器的连接断开，正在重连</Chip>
-        ) : null
+        connectionState ? null : (<Chip avatar={<ActivityIndicator size="small" color="#999999" />}>与服务器的连接断开，正在重连</Chip>)
       }
       <View style={styles.sectionContainer}>
         <TextInput
@@ -54,16 +56,10 @@ const LoginArea = (prop) => {
       <View style={styles.sectionContainer}>
         <Button mode="contained" onPress={
           () => {
-            if (prop.ws.readyState == WebSocket.OPEN) {
-              prop.ws.send(JSON.stringify(
-                {
-                  userid: accont,
-                  password: password
-                }
-              ));
-              StorageUtil.setItem("userid", accont);
-              StorageUtil.setItem("password", password);
-            }
+            dispatch(onSendingMessage({
+              userid: accont,
+              password: password
+            }))
           }
         }>
           登录
